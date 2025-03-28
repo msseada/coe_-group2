@@ -1,0 +1,70 @@
+#include <LiquidCrystal.h>
+
+// Initialize LCD (RS, E, D4, D5, D6, D7)
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+// Pin definitions
+int tempPin = A0;
+int pHPin = A1;
+int ldrPin = A2;
+int ledGreen = 7;
+int ledRed = 8;
+int buzzer = 9;
+
+void setup() {
+  // Set up LCD
+  lcd.begin(16, 2);
+  lcd.print("Starting...");
+  delay(1000);
+  
+  // Start serial for debugging
+  Serial.begin(9600);
+  
+  // Set pin modes
+  pinMode(ledGreen, OUTPUT);
+  pinMode(ledRed, OUTPUT);
+  pinMode(buzzer, OUTPUT);
+}
+
+void loop() {
+  // Read all sensors
+  float temp = (analogRead(tempPin) * 5.0 / 1023.0 - 0.5) * 100;
+  float pH = analogRead(pHPin) * 14.0 / 1023.0;
+  float turbidity = 100.0 - (analogRead(ldrPin) / 1023.0) * 100.0;
+
+  // Debugging output to Serial Monitor
+  Serial.print("Temp: ");
+  Serial.print(temp);
+  Serial.print("C pH: ");
+  Serial.print(pH);
+  Serial.print(" Turbidity: ");
+  Serial.println(turbidity);
+
+  // Update LCD
+  lcd.setCursor(0, 0);
+  lcd.print("T: ");
+  lcd.print(temp, 1); // Show temp with 1 decimal place
+  lcd.print("C pH: ");
+  lcd.print(pH, 1);
+
+  lcd.setCursor(0, 1);
+  lcd.print("Turb: ");
+  lcd.print(turbidity, 1);
+  lcd.print("% ");
+
+  // Check water quality (simple thresholds)
+  lcd.setCursor(12, 1);
+  if (temp > 30  temp < 26  pH < 6.5  pH > 7.5  turbidity > 70) {
+    digitalWrite(ledRed, HIGH);
+    digitalWrite(ledGreen, LOW);
+    tone(buzzer, 1000);
+    lcd.print("BAD!");
+  } else {
+    digitalWrite(ledGreen, HIGH);
+    digitalWrite(ledRed, LOW);
+    noTone(buzzer);
+    lcd.print("OK! ");
+  }
+  
+  delay(1000); // Update every second
+}
